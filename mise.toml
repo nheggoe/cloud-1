@@ -1,0 +1,26 @@
+[tools]
+go = "latest"
+
+[env]
+COUNTRIES_ENDPOINT = "http://129.241.150.113:8080/v3.1/"
+CURRENCY_ENDPOINT = "http://129.241.150.113:9090/currency/"
+
+[tasks.dev]
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+
+errred() { "$@" 2> >(while IFS= read -r line; do printf '\033[31m%s\033[0m\n' "$line" >&2; done); }
+
+mkdir -p ./bin
+go build -o ./bin/dev .
+errred ./bin/dev
+'''
+
+[tasks."dev:watch"]
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+
+mise watch dev --watch . --exts go --restart
+'''
