@@ -18,11 +18,12 @@ func TestInfoHandlerUsesConfiguredEndpoint(t *testing.T) {
 	}))
 	defer upstream.Close()
 
-	mux := NewMux(upstream.URL + "/v3.1")
-	req := httptest.NewRequest(http.MethodGet, "/no", nil)
+	handler := Handler(upstream.URL + "/v3.1")
+	req := httptest.NewRequest(http.MethodGet, "/countryinfo/v1/info/no", nil)
+	req.SetPathValue("country_code", "no")
 	w := httptest.NewRecorder()
 
-	mux.ServeHTTP(w, req)
+	handler(w, req)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected status 200, got %d", w.Code)
@@ -38,33 +39,14 @@ func TestInfoHandlerUsesConfiguredEndpoint(t *testing.T) {
 func TestInfoHandlerRejectsInvalidCountryCode(t *testing.T) {
 	t.Parallel()
 
-	mux := NewMux("http://example.com")
-	req := httptest.NewRequest(http.MethodGet, "/nor", nil)
+	handler := Handler("http://example.com")
+	req := httptest.NewRequest(http.MethodGet, "/countryinfo/v1/info/nor", nil)
+	req.SetPathValue("country_code", "nor")
 	w := httptest.NewRecorder()
 
-	mux.ServeHTTP(w, req)
+	handler(w, req)
 
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("expected status 400, got %d", w.Code)
-	}
-}
-
-func TestUsageAndMethodErrors(t *testing.T) {
-	t.Parallel()
-
-	mux := NewMux("http://example.com")
-
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	w := httptest.NewRecorder()
-	mux.ServeHTTP(w, req)
-	if w.Code != http.StatusBadRequest {
-		t.Fatalf("expected status 400 for GET /, got %d", w.Code)
-	}
-
-	req = httptest.NewRequest(http.MethodPost, "/", nil)
-	w = httptest.NewRecorder()
-	mux.ServeHTTP(w, req)
-	if w.Code != http.StatusMethodNotAllowed {
-		t.Fatalf("expected status 405 for POST /, got %d", w.Code)
 	}
 }

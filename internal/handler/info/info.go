@@ -1,7 +1,7 @@
 package info
 
 import (
-	"countryinfo/internal/handler"
+	"countryinfo/internal/util"
 	"fmt"
 	"io"
 	"log/slog"
@@ -11,9 +11,6 @@ import (
 )
 
 const (
-	Base = handler.Prefix + "/info"
-	Path = Base + "/"
-
 	upstreamPath    = "alpha/"
 	upstreamTimeout = 5 * time.Second
 )
@@ -23,44 +20,19 @@ type service struct {
 	baseURL string
 }
 
-func NewMux(endpoint string) http.Handler {
+func Handler(endpoint string) http.HandlerFunc {
 	s := &service{
 		client: &http.Client{
 			Timeout: upstreamTimeout,
 		},
-		baseURL: normalizeBaseURL(endpoint),
+		baseURL: util.CleanUrl(endpoint),
 	}
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /{country_code}", s.infoHandler)
-	mux.HandleFunc("/", s.usageOrMethodNotAllowedHandler)
-	return mux
-}
-
-func normalizeBaseURL(endpoint string) string {
-	cleaned := strings.TrimSpace(endpoint)
-	if cleaned == "" {
-		return ""
-	}
-	return strings.TrimSuffix(cleaned, "/") + "/"
-}
-
-func isAlpha2CountryCode(code string) bool {
-	if len(code) != 2 {
-		return false
-	}
-	for i := 0; i < len(code); i++ {
-		c := code[i]
-		if (c < 'A' || c > 'Z') && (c < 'a' || c > 'z') {
-			return false
-		}
-	}
-	return true
+	return s.infoHandler
 }
 
 func (s *service) infoHandler(w http.ResponseWriter, r *http.Request) {
 	countryCode := strings.ToLower(strings.TrimSpace(r.PathValue("country_code")))
-	if !isAlpha2CountryCode(countryCode) {
+	if !util.IsTwoLetterCountryCode(countryCode) {
 		http.Error(
 			w,
 			fmt.Sprintf("%s\ninvalid country code: %s", http.StatusText(http.StatusBadRequest), countryCode),
@@ -106,19 +78,4 @@ func (s *service) infoHandler(w http.ResponseWriter, r *http.Request) {
 		"country_code", countryCode,
 		"status", res.StatusCode,
 	)
-}
-
-func (s *service) usageOrMethodNotAllowedHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
-
-	w.Header().Set("Allow", http.MethodGet)
-	statusCode := http.StatusBadRequest
-	if r.Method != http.MethodGet {
-		statusCode = http.StatusMethodNotAllowed
-	}
-
-	http.Error(w, fmt.Sprintf("use GET %s{two_letter_country_code}", Path), statusCode)
 }

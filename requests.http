@@ -1,16 +1,15 @@
-@host = localhost:8080
-@prefix = countryinfo/v1
-
-@country_code = no
-
-### Status endpiont
-GET {{host}}/{{prefix}}/status
-
-
+### Status endpoint
+GET {{host}}{{prefix}}/status
 
 ### Country info
-GET {{host}}/{{prefix}}/info/{{country_code}}
-
+GET {{host}}{{prefix}}/info/{{country_code}}
 
 ### Exchange rate
-GET {{host}}/{{prefix}}/exchange/{{country_code}}
+GET {{host}}{{prefix}}/exchange/{{country_code}}
+
+### Root
+GET {{host}}
+
+
+### Help me
+GET {{host}}/countryinfo/v1/info/{{country_code}}

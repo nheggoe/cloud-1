@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	Path               = handler.Prefix + "/status"
 	apiVersion         = handler.APIVersion
 	statusProbeTimeout = 3 * time.Second
 	countryProbePath   = "alpha/no"
@@ -35,17 +34,14 @@ type service struct {
 	startTime        time.Time
 }
 
-func NewMux(cfg *config.Config) http.Handler {
+func Handler(cfg *config.Config) http.HandlerFunc {
 	s := &service{
 		client:           &http.Client{Timeout: statusProbeTimeout},
 		countryProbeURL:  probeURL(cfg.Countries, countryProbePath),
 		currencyProbeURL: probeURL(cfg.Currency, currencyProbePath),
 		startTime:        time.Now(),
 	}
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /", s.statusHandler)
-	mux.HandleFunc("/", s.statusUsageHandler)
-	return mux
+	return s.statusHandler
 }
 
 func (s *service) newServiceHealth(ctx context.Context) (*serviceHealth, error) {
@@ -90,15 +86,6 @@ func (s *service) probe(ctx context.Context, url string, name string) (int, erro
 	}
 
 	return res.StatusCode, nil
-}
-
-func (s *service) statusUsageHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
-	w.Header().Set("Allow", http.MethodGet)
-	http.Error(w, fmt.Sprintf("method not allowed: use GET %s", Path), http.StatusMethodNotAllowed)
 }
 
 func (s *service) statusHandler(w http.ResponseWriter, r *http.Request) {
