@@ -1,7 +1,7 @@
 package info
 
 import (
-	apiv1 "cloud1/endpoint/countryinfo/v1"
+	"countryinfo/internal/handler"
 	"fmt"
 	"io"
 	"log/slog"
@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	Base = apiv1.Prefix + "/info"
+	Base = handler.Prefix + "/info"
 	Path = Base + "/"
 
 	upstreamPath    = "alpha/"

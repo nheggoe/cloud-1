@@ -1,9 +1,9 @@
 package status
 
 import (
-	"cloud1/config"
-	apiv1 "cloud1/endpoint/countryinfo/v1"
 	"context"
+	"countryinfo/internal/config"
+	"countryinfo/internal/handler"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	Path               = apiv1.Prefix + "/status"
-	apiVersion         = apiv1.ApiVersion
+	Path               = handler.Prefix + "/status"
+	apiVersion         = handler.APIVersion
 	statusProbeTimeout = 3 * time.Second
 	countryProbePath   = "alpha/no"
 	currencyProbePath  = "NOK"

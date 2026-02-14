@@ -6,7 +6,7 @@ COPY go.mod go.sum* ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/discord-bot
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/server ./cmd/server
 
 FROM alpine:3.23
 
@@ -17,7 +17,7 @@ RUN apk add --no-cache ca-certificates \
   && chown -R app:app /app
 
 WORKDIR /app
-COPY --from=build --chown=app:app /out/discord-bot /usr/local/bin/discord-bot
+COPY --from=build --chown=app:app /out/server /usr/local/bin/server
 
 USER app:app
-ENTRYPOINT ["/usr/local/bin/discord-bot"]
+ENTRYPOINT ["/usr/local/bin/server"]

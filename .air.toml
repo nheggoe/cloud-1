@@ -1,0 +1,7 @@
+[build]
+cmd = "go build -o ./tmp/main ./cmd/server"
+entrypoint = ["./tmp/main"]
+exclude_dir = ["tmp", "bin", "vendor", "test"]
+include_ext = ["go"]
+kill_delay = "1s"
+send_interrupt = true

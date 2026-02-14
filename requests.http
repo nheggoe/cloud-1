@@ -1,0 +1,16 @@
+@host = localhost:8080
+@prefix = countryinfo/v1
+
+@country_code = no
+
+### Status endpiont
+GET {{host}}/{{prefix}}/status
+
+
+
+### Country info
+GET {{host}}/{{prefix}}/info/{{country_code}}
+
+
+### Exchange rate
+GET {{host}}/{{prefix}}/exchange/{{country_code}}

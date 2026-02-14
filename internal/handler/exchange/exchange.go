@@ -1,13 +1,13 @@
 package exchange
 
 import (
-	apiv1 "cloud1/endpoint/countryinfo/v1"
+	"countryinfo/internal/handler"
 	"fmt"
 	"net/http"
 )
 
 const (
-	Base = apiv1.Prefix + "/exchange"
+	Base = handler.Prefix + "/exchange"
 	Path = Base + "/"
 )
 

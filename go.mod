@@ -1,3 +1,3 @@
-module cloud1
+module countryinfo
 
 go 1.25.7
