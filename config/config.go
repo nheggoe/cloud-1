@@ -3,13 +3,25 @@ package config
 import (
 	"fmt"
 	"os"
-	"strconv"
 )
 
+type EnvVar string
+
+func (e EnvVar) Get() string {
+	return os.Getenv(string(e))
+}
+
+func (e EnvVar) GetOrDefault(defaultValue string) string {
+	if res := e.Get(); res != "" {
+		return res
+	}
+	return defaultValue
+}
+
 const (
-	Port              = "PORT"
-	CountriesEndpoint = "COUNTRIES_ENDPOINT"
-	CurrencyEndpoint  = "CURRENCY_ENDPOINT"
+	Port              EnvVar = "PORT"
+	CountriesEndpoint EnvVar = "COUNTRIES_ENDPOINT"
+	CurrencyEndpoint  EnvVar = "CURRENCY_ENDPOINT"
 )
 
 var (
@@ -24,7 +36,7 @@ type Config struct {
 }
 
 type ServerSetting struct {
-	Port int
+	Port string
 }
 
 type ApiEndpoint struct {
@@ -33,19 +45,18 @@ type ApiEndpoint struct {
 }
 
 func Load() (*Config, error) {
-
 	config := &Config{
-		ServerSetting{GetenvOrDefault(Port, 8080, func(s string) (int, error) { return strconv.Atoi(s) })},
+		ServerSetting{Port.GetOrDefault("8080")},
 		ApiEndpoint{
-			Countries: os.Getenv(CountriesEndpoint),
-			Currency:  os.Getenv(CurrencyEndpoint),
+			Countries: CountriesEndpoint.Get(),
+			Currency:  CurrencyEndpoint.Get(),
 		},
 	}
 	return config, validateConfig(config)
 }
 
 func validateConfig(cfg *Config) error {
-	if cfg.Port == 0 {
+	if cfg.Port == "" {
 		return PortRequired
 	}
 	if cfg.Countries == "" {
@@ -57,13 +68,6 @@ func validateConfig(cfg *Config) error {
 	return nil
 }
 
-func GetenvOrDefault[T any](name string, defaultValue T, f func(string) (T, error)) T {
-	if val, err := f(os.Getenv(name)); err == nil {
-		return val
-	}
-	return defaultValue
-}
-
-func envRequiredErr(env string) error {
+func envRequiredErr(env EnvVar) error {
 	return fmt.Errorf("%s is required", env)
 }

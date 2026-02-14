@@ -24,7 +24,7 @@ func main() {
 	mux := router.NewRouter(cfg)
 
 	server := &http.Server{
-		Addr:    fmt.Sprintf("localhost:%d", cfg.Port),
+		Addr:    fmt.Sprintf("localhost:%s", cfg.Port),
 		Handler: router.LoggingMiddleware(mux),
 	}
 	go func() {
