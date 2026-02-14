@@ -1,13 +1,30 @@
 package config
 
 import (
-	"errors"
+	"fmt"
 	"os"
-	"strings"
+	"strconv"
+)
+
+const (
+	Port              = "PORT"
+	CountriesEndpoint = "COUNTRIES_ENDPOINT"
+	CurrencyEndpoint  = "CURRENCY_ENDPOINT"
+)
+
+var (
+	PortRequired                = envRequiredErr(Port)
+	CountryApiEndpointRequired  = envRequiredErr(CountriesEndpoint)
+	CurrencyApiEndpointRequired = envRequiredErr(CurrencyEndpoint)
 )
 
 type Config struct {
+	ServerSetting
 	ApiEndpoint
+}
+
+type ServerSetting struct {
+	Port int
 }
 
 type ApiEndpoint struct {
@@ -16,28 +33,37 @@ type ApiEndpoint struct {
 }
 
 func Load() (*Config, error) {
+
 	config := &Config{
+		ServerSetting{GetenvOrDefault(Port, 8080, func(s string) (int, error) { return strconv.Atoi(s) })},
 		ApiEndpoint{
-			Countries: os.Getenv("COUNTRIES_ENDPOINT"),
-			Currency:  os.Getenv("CURRENCY_ENDPOINT"),
+			Countries: os.Getenv(CountriesEndpoint),
+			Currency:  os.Getenv(CurrencyEndpoint),
 		},
 	}
 	return config, validateConfig(config)
 }
 
 func validateConfig(cfg *Config) error {
-	var out strings.Builder
+	if cfg.Port == 0 {
+		return PortRequired
+	}
 	if cfg.Countries == "" {
-		out.WriteString("COUNTRIES_ENDPOINT is required")
+		return CountryApiEndpointRequired
 	}
 	if cfg.Currency == "" {
-		if out.Len() != 0 {
-			out.WriteByte('\n')
-		}
-		out.WriteString("CURRENCY_ENDPOINT is required")
-	}
-	if out.Len() != 0 {
-		return errors.New(out.String())
+		return CurrencyApiEndpointRequired
 	}
 	return nil
+}
+
+func GetenvOrDefault[T any](name string, defaultValue T, f func(string) (T, error)) T {
+	if val, err := f(os.Getenv(name)); err == nil {
+		return val
+	}
+	return defaultValue
+}
+
+func envRequiredErr(env string) error {
+	return fmt.Errorf("%s is required", env)
 }

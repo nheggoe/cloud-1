@@ -2,8 +2,9 @@ package router
 
 import (
 	"cloud1/config"
-	"cloud1/endpoint"
-	"cloud1/fp"
+	"cloud1/endpoint/countryinfo/v1/exchange"
+	"cloud1/endpoint/countryinfo/v1/info"
+	"cloud1/endpoint/countryinfo/v1/status"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -14,31 +15,40 @@ import (
 	"time"
 )
 
-var EndPoints = []string{
-	endpoint.Status, endpoint.Info, endpoint.Exchange,
+var Endpoints = []string{
+	status.Path, info.Path, exchange.Path,
 }
 
 // NewRouter creates a new instance of an HTTP router
 // configured with API endpoints and a root handler.
 func NewRouter(cfg *config.Config) http.Handler {
+	if cfg == nil {
+		panic("config is required")
+	}
 	router := http.NewServeMux()
-	Mount(router, endpoint.StatusBase, endpoint.StatusMux(cfg))
-	Mount(router, endpoint.InfoBase, endpoint.InfoMux(cfg.Countries))
-	Mount(router, endpoint.ExchangeBase, endpoint.ExchangeMux(cfg.Currency))
+	Mount(router, status.Path, status.NewMux(cfg))
+	Mount(router, info.Path, info.NewMux(cfg.Countries))
+	Mount(router, exchange.Path, exchange.NewMux(cfg.Currency))
 	router.HandleFunc("/", rootHelpOrNotFound)
 	return router
 }
 
-// Mount registers an HTTP handler to a specific base path
-// in the provided ServeMux with optional path stripping.
-func Mount(mux *http.ServeMux, base string, h http.Handler) {
-	base = strings.TrimSuffix(base, "/")
-	mux.Handle(base+"/", http.StripPrefix(base, h))
-	mux.HandleFunc(base, func(w http.ResponseWriter, r *http.Request) {
-		r2 := r.Clone(r.Context())
-		r2.URL.Path = "/"
-		h.ServeHTTP(w, r2)
-	})
+func Mount(httpMux http.Handler, path string, handler http.Handler) {
+	mux := httpMux.(*http.ServeMux)
+	prefix := strings.TrimSuffix(path, "/")
+	stripped := http.StripPrefix(prefix, handler)
+	if strings.HasSuffix(path, "/") {
+		mux.Handle(path, stripped)
+	} else {
+		// For exact paths (no trailing slash), StripPrefix yields an empty
+		// URL path which won't match "/" in the sub-mux. Rewrite to "/".
+		mux.Handle(path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			r.URL.Path = "/"
+			r.URL.RawPath = "/"
+			handler.ServeHTTP(w, r)
+		}))
+		mux.Handle(path+"/", stripped)
+	}
 }
 
 // LoggingMiddleware wraps an HTTP handler to log request details,
@@ -51,12 +61,6 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 				w.Header().Set("X-Request-ID", reqID)
 			}
 
-			logger := slog.Default().With(
-				"request_id", reqID,
-				"method", r.Method,
-				"path", r.URL.Path,
-			)
-
 			start := time.Now()
 			rw := &responseWriter{ResponseWriter: w}
 
@@ -67,7 +71,7 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 				status = http.StatusOK
 			}
 
-			logger.Info(
+			slog.Info(
 				"request completed",
 				"status", status,
 				"duration_ms", time.Since(start).Milliseconds(),
@@ -86,10 +90,11 @@ func rootHelpOrNotFound(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(
-		fmt.Sprintf(`Available endpoints:
-%s
-`, fp.Reduce(EndPoints, func(s string, s2 string) string { return s + "\n" + s2 }))))
+
+	body := fmt.Sprintf("Available endpoints:\n%s\n", strings.Join(Endpoints, "\n"))
+	if _, err := w.Write([]byte(body)); err != nil {
+		slog.Error("failed writing root response", "error", err)
+	}
 }
 
 type responseWriter struct {

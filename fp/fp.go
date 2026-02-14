@@ -4,7 +4,7 @@ func FoldLeft[A any, B any](as []A, acc B, f func(A, B) B) B {
 	if as == nil || len(as) == 0 {
 		return acc
 	}
-	return FoldLeft(as[1:], f(as[0], acc), f)
+	return FoldLeft[A, B](as[1:], f(as[0], acc), f)
 }
 
 func Map[A any, B any](as []A, f func(A) B) []B {

@@ -5,12 +5,12 @@ import (
 	"cloud1/router"
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -24,10 +24,9 @@ func main() {
 	mux := router.NewRouter(cfg)
 
 	server := &http.Server{
-		Addr:    "localhost:8080",
+		Addr:    fmt.Sprintf("localhost:%d", cfg.Port),
 		Handler: router.LoggingMiddleware(mux),
 	}
-	defer slog.Info("Gracefully shutting down")
 	go func() {
 		slog.Info("Server is live", "addr", server.Addr)
 		err := server.ListenAndServe()
@@ -40,32 +39,15 @@ func main() {
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 	<-sigCh
 
+	shutdown(server)
+}
+
+func shutdown(server *http.Server) {
+	slog.Info("Gracefully shutting down")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
 		log.Fatalf("Shutdown error: %v", err)
 	}
-}
-
-func setupLogger() {
-	level := new(slog.LevelVar)
-	if err := level.UnmarshalText([]byte(os.Getenv("LOG_LEVEL"))); err != nil {
-		level.Set(slog.LevelInfo)
-	}
-
-	opts := &slog.HandlerOptions{
-		AddSource: true,
-		Level:     level,
-	}
-
-	var handler slog.Handler
-	switch strings.ToLower(os.Getenv("LOG_FORMAT")) {
-	case "json":
-		handler = slog.NewJSONHandler(os.Stdout, opts)
-	default:
-		handler = slog.NewTextHandler(os.Stdout, opts)
-	}
-
-	slog.SetDefault(slog.New(handler))
 }
