@@ -27,7 +27,7 @@ func New(cfg *config.Config) *Server {
 
 	return &Server{
 		http: &http.Server{
-			Addr:    fmt.Sprintf("localhost:%s", cfg.Port),
+			Addr:    fmt.Sprintf(":%s", cfg.Port),
 			Handler: middleware.Logging(mux),
 		},
 	}
