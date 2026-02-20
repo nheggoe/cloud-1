@@ -1,6 +1,7 @@
 package info
 
 import (
+	"countryinfo/internal/restclient"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -14,11 +15,12 @@ func TestInfoHandlerUsesConfiguredEndpoint(t *testing.T) {
 		gotPath = r.URL.Path
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{"country":"Norway"}`))
+		_, _ = w.Write([]byte(`[{"name":{"common":"Norway"},"capital":["Oslo"],"continents":["Europe"],"population":5379475,"area":323802,"languages":{"nno":"Norwegian Nynorsk","nob":"Norwegian Bokmal","smi":"Sami"},"borders":["FIN","SWE","RUS"],"flags":{"png":"https://flagcdn.com/w320/no.png","svg":"https://flagcdn.com/no.svg","alt":"Norway flag"}}]`))
 	}))
 	defer upstream.Close()
 
-	handler := Handler(upstream.URL + "/v3.1")
+	client := restclient.NewCountriesClient(upstream.URL + "/v3.1")
+	handler := Handler(client)
 	req := httptest.NewRequest(http.MethodGet, "/countryinfo/v1/info/no", nil)
 	req.SetPathValue("country_code", "no")
 	w := httptest.NewRecorder()
@@ -31,15 +33,18 @@ func TestInfoHandlerUsesConfiguredEndpoint(t *testing.T) {
 	if gotPath != "/v3.1/alpha/no" {
 		t.Fatalf("expected upstream path /v3.1/alpha/no, got %q", gotPath)
 	}
-	if got := w.Body.String(); got != `{"country":"Norway"}` {
-		t.Fatalf("unexpected response body: %q", got)
+
+	expected := `{"name":"Norway","continents":["Europe"],"population":5379475,"area":323802,"languages":{"nno":"Norwegian Nynorsk","nob":"Norwegian Bokmal","smi":"Sami"},"borders":["FIN","SWE","RUS"],"flag":"https://flagcdn.com/w320/no.png","capital":"Oslo"}`
+	if got := w.Body.String(); got != expected {
+		t.Fatalf("unexpected response body:\ngot:  %q\nwant: %q", got, expected)
 	}
 }
 
 func TestInfoHandlerRejectsInvalidCountryCode(t *testing.T) {
 	t.Parallel()
 
-	handler := Handler("http://example.com")
+	client := restclient.NewCountriesClient("http://example.com")
+	handler := Handler(client)
 	req := httptest.NewRequest(http.MethodGet, "/countryinfo/v1/info/nor", nil)
 	req.SetPathValue("country_code", "nor")
 	w := httptest.NewRecorder()

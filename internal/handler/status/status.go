@@ -4,9 +4,9 @@ import (
 	"context"
 	"countryinfo/internal/config"
 	"countryinfo/internal/handler"
+	"countryinfo/internal/restclient"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -37,16 +37,16 @@ type service struct {
 func Handler(cfg *config.Config) http.HandlerFunc {
 	s := &service{
 		client:           &http.Client{Timeout: statusProbeTimeout},
-		countryProbeURL:  probeURL(cfg.Countries, countryProbePath),
-		currencyProbeURL: probeURL(cfg.Currency, currencyProbePath),
+		countryProbeURL:  probeURL(cfg.CountriesEndpoint, countryProbePath),
+		currencyProbeURL: probeURL(cfg.CurrencyEndPoint, currencyProbePath),
 		startTime:        time.Now(),
 	}
 	return s.statusHandler
 }
 
 func (s *service) newServiceHealth(ctx context.Context) (*serviceHealth, error) {
-	countryStatusCode, countryErr := s.probe(ctx, s.countryProbeURL, "restcountriesapi")
-	currencyStatusCode, currencyErr := s.probe(ctx, s.currencyProbeURL, "currenciesapi")
+	countryStatusCode, countryErr := restclient.Probe(ctx, s.client, s.countryProbeURL, "restcountriesapi")
+	currencyStatusCode, currencyErr := restclient.Probe(ctx, s.client, s.currencyProbeURL, "currenciesapi")
 
 	return &serviceHealth{
 		CountryAPI:  countryStatusCode,
@@ -62,30 +62,6 @@ func probeURL(base string, suffix string) string {
 		return ""
 	}
 	return strings.TrimSuffix(base, "/") + "/" + strings.TrimPrefix(suffix, "/")
-}
-
-func (s *service) probe(ctx context.Context, url string, name string) (int, error) {
-	url = strings.TrimSpace(url)
-	if url == "" {
-		return 0, fmt.Errorf("%s endpoint is empty", name)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return 0, fmt.Errorf("build request for %s: %w", name, err)
-	}
-
-	res, err := s.client.Do(req)
-	if err != nil {
-		return 0, fmt.Errorf("request %s failed: %w", name, err)
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode < http.StatusOK || res.StatusCode >= http.StatusMultipleChoices {
-		return res.StatusCode, fmt.Errorf("%s returned %d", name, res.StatusCode)
-	}
-
-	return res.StatusCode, nil
 }
 
 func (s *service) statusHandler(w http.ResponseWriter, r *http.Request) {

@@ -40,16 +40,16 @@ type ServerSetting struct {
 }
 
 type ApiEndpoint struct {
-	Countries string
-	Currency  string
+	CountriesEndpoint string
+	CurrencyEndPoint  string
 }
 
 func Load() (*Config, error) {
 	config := &Config{
 		ServerSetting{Port.GetOrDefault("8080")},
 		ApiEndpoint{
-			Countries: CountriesEndpoint.Get(),
-			Currency:  CurrencyEndpoint.Get(),
+			CountriesEndpoint: CountriesEndpoint.Get(),
+			CurrencyEndPoint:  CurrencyEndpoint.Get(),
 		},
 	}
 	return config, validateConfig(config)
@@ -59,10 +59,10 @@ func validateConfig(cfg *Config) error {
 	if cfg.Port == "" {
 		return PortRequired
 	}
-	if cfg.Countries == "" {
+	if cfg.CountriesEndpoint == "" {
 		return CountryApiEndpointRequired
 	}
-	if cfg.Currency == "" {
+	if cfg.CurrencyEndPoint == "" {
 		return CurrencyApiEndpointRequired
 	}
 	return nil

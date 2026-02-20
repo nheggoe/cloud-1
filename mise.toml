@@ -1,12 +1,18 @@
 [tools]
-go = "1.25.7"
+go = "1.26.0"
 "go:github.com/air-verse/air" = "latest"
-
 
 [env]
 COUNTRIES_ENDPOINT = "http://129.241.150.113:8080/v3.1/"
 CURRENCY_ENDPOINT = "http://129.241.150.113:9090/currency/"
 PORT = "8080"
 
+[tasks.build]
+run = "go build -o ./tmp/server ./cmd/server/main.go"
+
 [tasks.dev]
+depends = ["build"]
+run = "./tmp/server"
+
+[tasks."dev:watch"]
 run = "air"

@@ -1,15 +1,20 @@
+@prefix = {{host}}{{basePath}}
+
 ### Status endpoint
-GET {{host}}{{prefix}}/status
+GET {{prefix}}/status
 
 ### Country info
-GET {{host}}{{prefix}}/info/{{country_code}}
+GET {{prefix}}/info/{{country_code}}
 
 ### Exchange rate
-GET {{host}}{{prefix}}/exchange/{{country_code}}
+GET {{prefix}}/exchange/{{country_code}}
 
 ### Root
 GET {{host}}
 
-
 ### Help me
 GET {{host}}/countryinfo/v1/info/{{country_code}}
+
+
+### Country Exteral API
+GET http://129.241.150.113:8080/v3.1/alpha/{{country_code}}
