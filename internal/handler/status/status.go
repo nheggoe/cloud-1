@@ -3,7 +3,6 @@ package status
 import (
 	"context"
 	"countryinfo/internal/config"
-	"countryinfo/internal/handler"
 	"countryinfo/internal/restclient"
 	"encoding/json"
 	"errors"
@@ -14,7 +13,7 @@ import (
 )
 
 const (
-	apiVersion         = handler.APIVersion
+	apiVersion         = "v1"
 	statusProbeTimeout = 3 * time.Second
 	countryProbePath   = "alpha/no"
 	currencyProbePath  = "NOK"
@@ -38,7 +37,7 @@ func Handler(cfg *config.Config) http.HandlerFunc {
 	s := &service{
 		client:           &http.Client{Timeout: statusProbeTimeout},
 		countryProbeURL:  probeURL(cfg.CountriesEndpoint, countryProbePath),
-		currencyProbeURL: probeURL(cfg.CurrencyEndPoint, currencyProbePath),
+		currencyProbeURL: probeURL(cfg.CurrencyEndpoint, currencyProbePath),
 		startTime:        time.Now(),
 	}
 	return s.statusHandler

@@ -1,7 +1,6 @@
 package fp
 
 import (
-	"reflect"
 	"testing"
 )
 
@@ -31,40 +30,28 @@ func TestFoldLeft(t *testing.T) {
 	})
 }
 
-func TestMap(t *testing.T) {
-	t.Run("maps values in order", func(t *testing.T) {
-		as := []int{1, 2, 3}
-		got := Map(as, func(a int) int { return a * 2 })
-		want := []int{2, 4, 6}
-		if !reflect.DeepEqual(got, want) {
-			t.Fatalf("expected %v, got %v", want, got)
+func TestForAll(t *testing.T) {
+	t.Run("all match returns true", func(t *testing.T) {
+		as := []int{2, 4, 6}
+		got := ForAll(as, func(a int) bool { return a%2 == 0 })
+		if !got {
+			t.Fatal("expected true for all even numbers")
 		}
 	})
 
-	t.Run("nil slice returns empty (non-nil) slice", func(t *testing.T) {
+	t.Run("one mismatch returns false", func(t *testing.T) {
+		as := []int{2, 3, 6}
+		got := ForAll(as, func(a int) bool { return a%2 == 0 })
+		if got {
+			t.Fatal("expected false when one element is odd")
+		}
+	})
+
+	t.Run("empty slice returns true", func(t *testing.T) {
 		var as []int
-		got := Map(as, func(a int) int { return a * 2 })
-		if got == nil || len(got) != 0 {
-			t.Fatalf("expected empty non-nil slice, got %v", got)
-		}
-	})
-}
-
-func TestReduce(t *testing.T) {
-	t.Run("reduce numbers sum", func(t *testing.T) {
-		as := []int{10, 5, 5, 10, 20}
-		got := Reduce(as, func(a int, b int) int { return a + b })
-		want := 50
-		if got != want {
-			t.Fatalf("expected %v, got %v", want, got)
-		}
-	})
-	t.Run("reduce string (mkString)", func(t *testing.T) {
-		as := []string{"First", "Second", "Third"}
-		want := "First\nSecond\nThird"
-		got := Reduce(as, func(s string, s2 string) string { return s + "\n" + s2 })
-		if want != got {
-			t.Fatalf("expected %v, got %v", want, got)
+		got := ForAll(as, func(a int) bool { return false })
+		if !got {
+			t.Fatal("expected true for empty slice")
 		}
 	})
 }

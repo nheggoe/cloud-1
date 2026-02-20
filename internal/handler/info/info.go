@@ -26,6 +26,10 @@ type Response struct {
 }
 
 func NewResponse(c restclient.Country) Response {
+	capital := ""
+	if len(c.Capital) > 0 {
+		capital = c.Capital[0]
+	}
 	return Response{
 		Name:       c.Name.Common,
 		Continents: c.Continents,
@@ -34,7 +38,7 @@ func NewResponse(c restclient.Country) Response {
 		Languages:  c.Languages,
 		Borders:    c.Borders,
 		Flag:       c.Flags.Png,
-		Capital:    c.Capital[0],
+		Capital:    capital,
 	}
 }
 
@@ -59,7 +63,11 @@ func (s *service) infoHandler(w http.ResponseWriter, r *http.Request) {
 	countries, err := s.countries.GetByAlpha(r.Context(), countryCode)
 	if err != nil {
 		slog.ErrorContext(r.Context(), "upstream countries request failed", "error", err)
-		http.Error(w, err.Error(), http.StatusBadGateway)
+		http.Error(w, "failed to reach countries endpoint", http.StatusBadGateway)
+		return
+	}
+	if len(countries) == 0 {
+		http.Error(w, "country not found", http.StatusNotFound)
 		return
 	}
 

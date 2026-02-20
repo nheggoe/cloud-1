@@ -28,9 +28,12 @@ func Logging(next http.Handler) http.Handler {
 
 			slog.Info(
 				"request completed",
+				"method", r.Method,
+				"path", r.URL.Path,
 				"status", status,
 				"duration_ms", time.Since(start).Milliseconds(),
 				"bytes", rw.bytes,
+				"request_id", reqID,
 				"remote_addr", r.RemoteAddr,
 				"user_agent", r.UserAgent(),
 			)

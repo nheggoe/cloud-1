@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"sort"
 	"strings"
 )
 
@@ -96,12 +97,18 @@ func (s *service) exchangeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 4. Filter rates to only include neighbouring countries' currencies.
-	exchangeRates := make([]map[string]float64, 0, len(neighbourCurrencies))
+	// 4. Filter rates to only include neighboring countries' currencies.
+	codes := make([]string, 0, len(neighbourCurrencies))
 	for code := range neighbourCurrencies {
-		if rate, ok := rates.Rates[code]; ok {
-			exchangeRates = append(exchangeRates, map[string]float64{code: rate})
+		if _, ok := rates.Rates[code]; ok {
+			codes = append(codes, code)
 		}
+	}
+	sort.Strings(codes)
+
+	exchangeRates := make([]map[string]float64, 0, len(codes))
+	for _, code := range codes {
+		exchangeRates = append(exchangeRates, map[string]float64{code: rates.Rates[code]})
 	}
 
 	writeJSON(w, r, ExchangeResponse{

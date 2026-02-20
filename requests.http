@@ -1,4 +1,5 @@
 @prefix = {{host}}{{basePath}}
+@country_code = no
 
 ### Status endpoint
 GET {{prefix}}/status
@@ -12,9 +13,9 @@ GET {{prefix}}/exchange/{{country_code}}
 ### Root
 GET {{host}}
 
-### Help me
-GET {{host}}/countryinfo/v1/info/{{country_code}}
-
-
-### Country Exteral API
+### Country External API
 GET http://129.241.150.113:8080/v3.1/alpha/{{country_code}}
+
+### Currency Exchange API
+@currency_code = nok
+GET http://129.241.150.113:9090/currency/{{currency_code}}

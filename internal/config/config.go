@@ -25,45 +25,41 @@ const (
 )
 
 var (
-	PortRequired                = envRequiredErr(Port)
-	CountryApiEndpointRequired  = envRequiredErr(CountriesEndpoint)
-	CurrencyApiEndpointRequired = envRequiredErr(CurrencyEndpoint)
+	CountryAPIEndpointRequired  = envRequiredErr(CountriesEndpoint)
+	CurrencyAPIEndpointRequired = envRequiredErr(CurrencyEndpoint)
 )
 
 type Config struct {
 	ServerSetting
-	ApiEndpoint
+	APIEndpoint
 }
 
 type ServerSetting struct {
 	Port string
 }
 
-type ApiEndpoint struct {
+type APIEndpoint struct {
 	CountriesEndpoint string
-	CurrencyEndPoint  string
+	CurrencyEndpoint  string
 }
 
 func Load() (*Config, error) {
-	config := &Config{
+	cfg := &Config{
 		ServerSetting{Port.GetOrDefault("8080")},
-		ApiEndpoint{
+		APIEndpoint{
 			CountriesEndpoint: CountriesEndpoint.Get(),
-			CurrencyEndPoint:  CurrencyEndpoint.Get(),
+			CurrencyEndpoint:  CurrencyEndpoint.Get(),
 		},
 	}
-	return config, validateConfig(config)
+	return cfg, validateConfig(cfg)
 }
 
 func validateConfig(cfg *Config) error {
-	if cfg.Port == "" {
-		return PortRequired
-	}
 	if cfg.CountriesEndpoint == "" {
-		return CountryApiEndpointRequired
+		return CountryAPIEndpointRequired
 	}
-	if cfg.CurrencyEndPoint == "" {
-		return CurrencyApiEndpointRequired
+	if cfg.CurrencyEndpoint == "" {
+		return CurrencyAPIEndpointRequired
 	}
 	return nil
 }

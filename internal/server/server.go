@@ -38,7 +38,7 @@ func New(cfg *config.Config) *Server {
 func (s *Server) Run() error {
 	// Start server in a goroutine
 	go func() {
-		slog.Info("Server is live test", "addr", s.http.Addr)
+		slog.Info("Server started", "addr", s.http.Addr)
 		err := s.http.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("Server error: %v", err)

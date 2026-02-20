@@ -16,17 +16,8 @@ const (
 
 // CurrencyResponse represents the upstream currency exchange API response.
 type CurrencyResponse struct {
-	Result             string             `json:"result"`
-	Provider           string             `json:"provider"`
-	Documentation      string             `json:"documentation"`
-	TermsOfUse         string             `json:"terms_of_use"`
-	TimeLastUpdateUnix int64              `json:"time_last_update_unix"`
-	TimeLastUpdateUTC  string             `json:"time_last_update_utc"`
-	TimeNextUpdateUnix int64              `json:"time_next_update_unix"`
-	TimeNextUpdateUTC  string             `json:"time_next_update_utc"`
-	TimeEOLUnix        int64              `json:"time_eol_unix"`
-	BaseCode           string             `json:"base_code"`
-	Rates              map[string]float64 `json:"rates"`
+	BaseCode string             `json:"base_code"`
+	Rates    map[string]float64 `json:"rates"`
 }
 
 // CurrencyClient handles HTTP communication with the currency exchange API.
@@ -36,7 +27,7 @@ type CurrencyClient struct {
 }
 
 // NewCurrencyClient creates a CurrencyClient for the given base URL.
-// The base URL should point to the currency service, e.g. "http://host:port/currency".
+// The base URL should point to the currency service, e.g. "http://129.241.150.113:9090/currency".
 func NewCurrencyClient(baseURL string) *CurrencyClient {
 	cleaned := strings.TrimSpace(baseURL)
 	if cleaned != "" {
@@ -67,9 +58,8 @@ func (c *CurrencyClient) GetExchangeRates(ctx context.Context, currencyCode stri
 	}
 	defer res.Body.Close()
 
-	contentType := res.Header.Get("Content-Type")
-	if !strings.HasPrefix(contentType, "application/json") {
-		return nil, fmt.Errorf("currency endpoint returned non-JSON response")
+	if res.StatusCode < http.StatusOK || res.StatusCode >= http.StatusMultipleChoices {
+		return nil, fmt.Errorf("currency endpoint returned status %d", res.StatusCode)
 	}
 
 	body, err := io.ReadAll(res.Body)

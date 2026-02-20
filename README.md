@@ -11,11 +11,11 @@ dependent services.
 
 The service is configured via environment variables:
 
-| Variable             | Required | Default | Description                                                                 |
-|----------------------|----------|---------|-----------------------------------------------------------------------------|
-| `PORT`               | No       | `8080`  | Port the HTTP server listens on                                             |
-| `COUNTRIES_ENDPOINT`  | Yes      | -       | Base URL for the REST Countries API (e.g. `http://129.241.150.113:8080/v3.1`) |
-| `CURRENCY_ENDPOINT`   | Yes      | -       | Base URL for the Currency Exchange API (e.g. `http://129.241.150.113:9090/currency`) |
+| Variable             | Required | Default | Description                                                                          |
+|----------------------|----------|---------|--------------------------------------------------------------------------------------|
+| `PORT`               | No       | `8080`  | Port the HTTP server listens on                                                      |
+| `COUNTRIES_ENDPOINT` | Yes      | -       | Base URL for the REST Countries API (e.g. `http://129.241.150.113:8080/v3.1`)        |
+| `CURRENCY_ENDPOINT`  | Yes      | -       | Base URL for the Currency Exchange API (e.g. `http://129.241.150.113:9090/currency`) |
 
 ## Running
 
@@ -241,8 +241,8 @@ internal/
 This service depends on two external APIs:
 
 - **REST Countries API**
-  - Endpoint: http://129.241.150.113:8080/v3.1/
-  - Documentation: http://129.241.150.113:8080/
+    - Endpoint: http://129.241.150.113:8080/v3.1/
+    - Documentation: http://129.241.150.113:8080/
 - **Currency Exchange API**
-  - Endpoint: http://129.241.150.113:9090/currency/
-  - Documentation: http://129.241.150.113:9090/
+    - Endpoint: http://129.241.150.113:9090/currency/
+    - Documentation: http://129.241.150.113:9090/
